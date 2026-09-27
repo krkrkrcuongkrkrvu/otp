@@ -1,0 +1,446 @@
+<!DOCTYPE html>
+<html lang="vi">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, minimum-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover"/>
+  <title>SMS (Cấu Hình Trung Tâm)</title>
+  <style>
+    /* 🔒 KHÓA ZOOM VÀ CUỘN TUYỆT ĐỐI CHO IPHONE SE2 */
+    html { 
+      -webkit-text-size-adjust: 100%; text-size-adjust: 100%; touch-action: none; 
+      height: 100%; overflow: hidden; 
+    }
+    body { 
+      font-family: -apple-system, BlinkMacSystemFont, sans-serif;
+      background: #f0f2f5; display: flex; flex-direction: column;
+      align-items: center; padding: 12px; margin: 0;
+      height: 100%; box-sizing: border-box; overflow: hidden; 
+    }
+    
+    button, input, select, a, label { touch-action: manipulation; }
+    
+    .header-bar {
+      width: 100%; max-width: 400px; display: flex; justify-content: space-between; align-items: center;
+      margin-bottom: 8px; padding: 0 5px; flex-shrink: 0;
+    }
+
+    .card {
+      background: white; padding: 12px; border-radius: 12px; 
+      box-shadow: 0 4px 12px rgba(0,0,0,0.08); width: 100%; max-width: 400px;
+      box-sizing: border-box; display: flex; flex-direction: column; gap: 10px;
+      flex-shrink: 0;
+    }
+
+    .modal {
+      display: none; position: fixed; top: 0; left: 0; width: 100%; height: 100%;
+      background: rgba(0,0,0,0.6); z-index: 1000; justify-content: center; align-items: center;
+    }
+    .modal-content {
+      background: white; padding: 20px; border-radius: 12px; width: 90%; max-width: 400px;
+      max-height: 90vh; overflow-y: auto; box-sizing: border-box;
+    }
+
+    .form-group { width: 100%; }
+    .form-group label { display: block; font-size: 13px; font-weight: 600; color: #555; margin-bottom: 4px; }
+    
+    input, select {
+      font-size: 16px; width: 100%; padding: 10px; border-radius: 6px; 
+      border: 1px solid #ccc; box-sizing: border-box; background: #fff;
+    }
+    
+    .display-box {
+      font-size: 24px !important; font-weight: bold; text-align: center; 
+      cursor: pointer; background: #f8f9fa !important; border: 2px dashed #ccc !important;
+      color: #333; padding: 12px 10px !important; transition: all 0.2s;
+    }
+    .display-box:active { background: #e9ecef !important; transform: scale(0.98); }
+    #phoneOutput { color: #7367F0; }
+    #otpOutput { color: #28C76F; font-size: 28px !important; }
+
+    .row-inputs { display: flex; gap: 10px; width: 100%; align-items: flex-end;}
+    .row-inputs .form-group { flex: 1; margin-bottom: 0; }
+    .checkbox-group { width: 100%; display: flex; align-items: center; gap: 8px; font-size: 14px; color: #333; }
+    .checkbox-group input { width: 22px; height: 22px; margin: 0; }
+
+    button { 
+      color: white; border: none; cursor: pointer; font-weight: bold; 
+      transition: opacity 0.2s; font-size: 16px; border-radius: 6px; padding: 12px;
+    }
+    button:active { opacity: 0.7; transform: scale(0.98); }
+    button:disabled { background: #6c757d !important; cursor: not-allowed; transform: none; }
+    
+    .btn-buy { background: #7367F0; font-size: 18px; flex: 1; box-shadow: 0 4px 10px rgba(115, 103, 240, 0.3);}
+    .btn-change { background: #EA5455; font-size: 16px; width: 100px; box-shadow: 0 4px 10px rgba(234, 84, 85, 0.3); padding: 12px 5px;}
+    .btn-save { background: #28C76F; width: 100%; margin-top: 15px; font-size: 18px; }
+
+    #customToast {
+      position: fixed; top: -100px; left: 0; width: 100%; background-color: #333; color: white;
+      text-align: center; padding: 14px 10px; font-size: 16px; font-weight: bold;
+      box-shadow: 0 4px 12px rgba(0,0,0,0.3); z-index: 9999; transition: top 0.4s ease-in-out;
+    }
+    #customToast.show { top: 0; }
+    #customToast.error { background-color: #EA5455; }
+    #customToast.success { background-color: #28C76F; }
+    
+    #statusText {
+      color: #EA5455; font-size: 13px; text-align: center; margin: 2px 0; 
+      font-weight: 600; word-break: break-all;
+    }
+  </style>
+</head>
+<body>
+<div id="customToast"></div>
+
+<div class="header-bar">
+  <div>
+    <h3 style="margin: 0; color: #333; line-height: 1.2;">SMS</h3>
+    <!-- Nút tải lại trang sẽ tự động nạp cấu hình mới nhất từ code -->
+    <a href="javascript:window.location.reload(true)" style="font-size: 13px; color: #7367F0; text-decoration: underline;">Tải lại trang</a>
+  </div>
+  <button id="openSettingsBtn" style="background: transparent; font-size: 26px; padding: 5px; color: #555;">⚙️</button>
+</div>
+
+<!-- ============================================== -->
+<!-- CỤM 1: TRÊN CÙNG -->
+<!-- ============================================== -->
+<div class="card">
+  <div style="display: flex; gap: 10px; width: 100%;">
+    <button id="buyPhoneBtn" class="btn-buy">🛒 MUA NGAY</button>
+    <button id="changePhoneBtn" class="btn-change">🔄 ĐỔI SỐ</button>
+  </div>
+  <p id="statusText">Sẵn sàng</p>
+</div>
+
+<!-- ĐẨY CỤM 2 XUỐNG ĐÁY MÀN HÌNH -->
+<div style="flex-grow: 1; width: 100%;"></div>
+
+<!-- ============================================== -->
+<!-- CỤM 2: SÁT ĐÁY MÀN HÌNH -->
+<!-- ============================================== -->
+<div class="card" style="margin-bottom: 5px;">
+  <div class="form-group" style="margin-bottom: 0;">
+    <label style="text-align: center;">SỐ ĐIỆN THOẠI (Chạm để Copy)</label>
+    <input type="text" id="phoneOutput" class="display-box" data-raw="" readonly value="---">
+  </div>
+  <div class="form-group" style="margin-bottom: 0;">
+    <label style="text-align: center;">MÃ OTP (Chạm để Copy)</label>
+    <input type="text" id="otpOutput" class="display-box" readonly value="---">
+  </div>
+</div>
+
+<!-- POPUP CÀI ĐẶT DÙNG ĐỂ THEO DÕI NẾU CẦN -->
+<div id="settingsModal" class="modal">
+  <div class="modal-content">
+    <h3 style="text-align: center; margin-top: 0; color: #333;">⚙️ THÔNG SỐ HIỆN TẠI</h3>
+    <p style="text-align: center; font-size: 12px; color: #d93025; margin-top: -10px;">(Chỉnh sửa tận gốc trong file code)</p>
+    
+    <div class="form-group" style="margin-bottom: 10px;">
+      <label>API Key</label>
+      <input type="password" id="apiKey" />
+    </div>
+
+    <div class="row-inputs" style="margin-bottom: 10px;">
+      <div class="form-group"><label>Mã Dịch vụ</label><input type="text" id="serviceId" /></div>
+      <div class="form-group"><label>ID Quốc gia</label><input type="number" id="countryId" /></div>
+    </div>
+
+    <div class="row-inputs" style="margin-bottom: 10px;">
+      <div class="form-group"><label>Nhà mạng</label><input type="text" id="operatorId" /></div>
+      <div class="form-group"><label>Giá chốt cứng</label><input type="number" step="0.0001" id="maxPrice" /></div>
+    </div>
+
+    <div class="row-inputs" style="align-items: center; background: #fafafa; padding: 10px; border-radius: 6px; border: 1px dashed #ccc; margin-bottom: 10px;">
+      <div class="form-group" style="flex: 0 0 100px; margin-bottom: 0;">
+        <input type="number" id="cutPrefix" placeholder="Auto Cắt" style="padding: 8px; font-size: 14px; text-align: center;" />
+      </div>
+      <div class="checkbox-group" style="margin-top: 0; margin-left: 5px;">
+        <input type="checkbox" id="addZeroCb" />
+        <label for="addZeroCb" style="font-size: 14px; margin-bottom: 0; font-weight: normal;">Thêm "0" vào đầu</label>
+      </div>
+    </div>
+
+    <div class="form-group">
+      <label>Chuẩn xác thực API</label>
+      <select id="authType">
+        <option value="ApiKey">Chuẩn: ApiKey (Khuyên dùng)</option>
+        <option value="Bearer">Chuẩn: Bearer</option>
+      </select>
+    </div>
+
+    <button id="closeSettingsBtn" class="btn-save">💾 ĐÓNG</button>
+  </div>
+</div>
+
+<script>
+// ==============================================================
+// 🎯 BẢNG ĐIỀU KHIỂN TRUNG TÂM (GLOBAL CONFIG) 🎯
+// (Bạn CHỈ CẦN sửa thông số trong ngoặc kép ở ĐÂY là tất cả 20 máy đều nhận)
+// ==============================================================
+const GLOBAL_CONFIG = {
+  // 1. Link Worker Cloudflare (Nhớ giữ đuôi ?url=)
+  MY_PRIVATE_PROXY: "https://otp.ctp88.workers.dev/?url=", 
+  
+  // 2. API Key của Hero-SMS
+  API_KEY: "05366AAf596550b04819623f09A0de3f", 
+
+  // 3. Mã Dịch Vụ (VD: tg, lf...)
+  SERVICE_ID: "lf", 
+
+  // 4. Mã Quốc Gia (VD: 73 là Brazil)
+  COUNTRY_ID: "73", 
+
+  // 5. Nhà Mạng (Cứ để trống "" để mua bất kỳ)
+  OPERATOR_ID: "", 
+
+  // 6. Giá Chốt Cứng (Cứ để trống "" để tự lấy giá gốc rẻ nhất, chống lỗi Hết số)
+  MAX_PRICE: "0.054", 
+
+  // 7. Auto cắt mã vùng (Ví dụ: "55")
+  CUT_PREFIX: "55", 
+
+  // 8. Tự động thêm số "0" vào đầu SĐT? (true = Có / false = Không)
+  ADD_ZERO: false, 
+
+  // 9. Chuẩn gọi API
+  AUTH_TYPE: "ApiKey"
+};
+// ==============================================================
+
+const API_URL_BUY = "https://hero-sms.com/api/v1/activations"; 
+let currentActivationId = null; 
+let otpPollingInterval = null;
+let isBuying = false; 
+
+const settingsModal = document.getElementById('settingsModal');
+document.getElementById('openSettingsBtn').addEventListener('click', () => settingsModal.style.display = 'flex');
+document.getElementById('closeSettingsBtn').addEventListener('click', () => settingsModal.style.display = 'none');
+
+// 🚀 NẠP CẤU HÌNH TỪ TRUNG TÂM MỖI KHI MỞ TRANG
+document.addEventListener("DOMContentLoaded", () => {
+  document.getElementById('apiKey').value = GLOBAL_CONFIG.API_KEY;
+  document.getElementById('serviceId').value = GLOBAL_CONFIG.SERVICE_ID;
+  document.getElementById('countryId').value = GLOBAL_CONFIG.COUNTRY_ID;
+  document.getElementById('operatorId').value = GLOBAL_CONFIG.OPERATOR_ID;
+  document.getElementById('maxPrice').value = GLOBAL_CONFIG.MAX_PRICE;
+  document.getElementById('cutPrefix').value = GLOBAL_CONFIG.CUT_PREFIX;
+  document.getElementById('addZeroCb').checked = GLOBAL_CONFIG.ADD_ZERO;
+  document.getElementById('authType').value = GLOBAL_CONFIG.AUTH_TYPE;
+});
+
+function reformatDisplayedPhone() {
+  const rawPhone = document.getElementById('phoneOutput').dataset.raw;
+  if (!rawPhone || rawPhone === "---") return;
+  let cleanPhone = rawPhone.replace(/\D/g, '');
+  let cutPrefix = document.getElementById('cutPrefix').value.replace(/\D/g, '');
+  let addZero = document.getElementById('addZeroCb').checked;
+
+  if (cutPrefix && cleanPhone.startsWith(cutPrefix)) cleanPhone = cleanPhone.substring(cutPrefix.length);
+  if (addZero && !cleanPhone.startsWith('0')) cleanPhone = '0' + cleanPhone;
+  document.getElementById('phoneOutput').value = cleanPhone;
+}
+
+document.getElementById('cutPrefix').addEventListener('input', reformatDisplayedPhone);
+document.getElementById('addZeroCb').addEventListener('change', reformatDisplayedPhone);
+
+// ==========================================
+// CHỨC NĂNG ĐỔI SỐ
+// ==========================================
+document.getElementById('changePhoneBtn').addEventListener('click', () => {
+  if (isBuying) return; 
+  clearInterval(otpPollingInterval);
+  document.getElementById('phoneOutput').value = "---";
+  document.getElementById('phoneOutput').dataset.raw = "";
+  document.getElementById('otpOutput').value = "---";
+  setStatus('Đã hủy số cũ. Đang mua số mới...', '#666');
+  document.getElementById('buyPhoneBtn').click();
+});
+
+// ==========================================
+// HÀM MUA SỐ
+// ==========================================
+document.getElementById('buyPhoneBtn').addEventListener('click', () => {
+  if (isBuying) return; 
+  
+  // Lấy dữ liệu từ giao diện (Giao diện đã được tự động nạp từ GLOBAL_CONFIG)
+  let apiKey = document.getElementById('apiKey').value.trim();
+  const serviceId = document.getElementById('serviceId').value.trim();
+  const countryId = document.getElementById('countryId').value.trim();
+  const operatorId = document.getElementById('operatorId').value.trim();
+  const price = document.getElementById('maxPrice').value.trim();
+  const authType = document.getElementById('authType').value; 
+  
+  if (!apiKey || !serviceId || !countryId || apiKey === "ĐIỀN_API_KEY_CỦA_BẠN_VÀO_ĐÂY") {
+    settingsModal.style.display = 'flex';
+    return showToast('⚠️ Vui lòng khai báo API Key vào file Code', true);
+  }
+
+  apiKey = apiKey.replace(/\s+/g, '');
+  isBuying = true; 
+  
+  const btn = document.getElementById('buyPhoneBtn');
+  btn.disabled = true; btn.textContent = "⏳...";
+  setStatus('⏳ Đang gọi máy chủ...', '#666');
+  
+  document.getElementById('phoneOutput').value = "---";
+  document.getElementById('phoneOutput').dataset.raw = "";
+  document.getElementById('otpOutput').value = "---";
+  clearInterval(otpPollingInterval);
+
+  let requestBody = {
+    service: serviceId, country: parseInt(countryId), amount: 1, verificationType: "sms"
+  };
+  if (operatorId) requestBody.operator = operatorId;
+  if (price) {
+    requestBody.maxPrice = parseFloat(price);
+    requestBody.fixedPrice = true; 
+  }
+
+  const farmDelay = Math.floor(Math.random() * 800); 
+  const targetProxyUrl = `${GLOBAL_CONFIG.MY_PRIVATE_PROXY}${encodeURIComponent(API_URL_BUY)}&key=${encodeURIComponent(apiKey)}&auth=${encodeURIComponent(authType)}`;
+
+  setTimeout(async () => {
+    try {
+      const response = await fetch(targetProxyUrl, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify(requestBody)
+      });
+      
+      const rawText = await response.text();
+      let data;
+      try { data = JSON.parse(rawText); } 
+      catch(e) {
+        setStatus(`❌ Lỗi Máy Chủ: ${rawText.substring(0, 30)}...`);
+        isBuying = false; btn.disabled = false; btn.textContent = "🛒 MUA NGAY"; return;
+      }
+
+      if (response.ok && data.data && data.data.length > 0) {
+        const order = data.data[0];
+        currentActivationId = order.id; 
+        document.getElementById('phoneOutput').dataset.raw = order.phone;
+        
+        if (order.countryPhoneCode) {
+          const detectedPrefix = order.countryPhoneCode.toString().replace(/\D/g, '');
+          if(!document.getElementById('cutPrefix').value) document.getElementById('cutPrefix').value = detectedPrefix;
+        }
+        
+        reformatDisplayedPhone();
+        showToast('✅ Mua số thành công!', false, true);
+        setStatus('✅ Đang dò OTP...', '#28C76F');
+        startAutoCheckOTP(apiKey, authType); 
+      } else {
+        let exactError = rawText; 
+        if (data.message) exactError = data.message;
+        else if (data.error) exactError = data.error;
+        else if (data.details) exactError = data.details;
+        showToast('⚠️ Lỗi Mua Số', true);
+        setStatus(`❌ ${exactError}`);
+      }
+    } catch (error) {
+      showToast('⚠️ Lỗi Proxy', true);
+      setStatus('❌ Vui lòng kiểm tra lại Cloudflare.');
+    } finally {
+      isBuying = false; btn.disabled = false; btn.textContent = "🛒 MUA NGAY";
+    }
+  }, farmDelay);
+});
+
+// ==========================================
+// HÀM DÒ OTP TỰ ĐỘNG
+// ==========================================
+function startAutoCheckOTP(apiKey, authType) {
+  if (otpPollingInterval) clearInterval(otpPollingInterval);
+  let attempts = 0;
+  const jitterOffset = Math.floor(Math.random() * 2000); 
+  
+  otpPollingInterval = setInterval(async () => {
+    attempts++;
+    setStatus(`⏳ Đang dò OTP... (Lần ${attempts})`, '#666');
+    if(attempts > 60) { clearInterval(otpPollingInterval); setStatus('⚠️ Hết 5 phút chờ OTP.'); return; }
+
+    const targetProxyUrl = `${GLOBAL_CONFIG.MY_PRIVATE_PROXY}${encodeURIComponent(API_URL_BUY)}&key=${encodeURIComponent(apiKey)}&auth=${encodeURIComponent(authType)}`;
+
+    try {
+      const response = await fetch(targetProxyUrl, { method: 'GET' });
+      if (response.status === 429) return; 
+      
+      const data = await response.json();
+      if (response.ok && data.data) {
+        const activeOrder = data.data.find(item => item.id === currentActivationId);
+        
+        if (activeOrder && activeOrder.otpList && activeOrder.otpList.length > 0) {
+          let latestOtpObj = activeOrder.otpList[activeOrder.otpList.length - 1];
+          let finalOtp = "";
+          
+          if (typeof latestOtpObj === 'object') {
+            finalOtp = latestOtpObj.smsCode || latestOtpObj.code || latestOtpObj.otp || "";
+            if (!finalOtp && latestOtpObj.smsText) {
+              const match = latestOtpObj.smsText.match(/\d{4,8}/);
+              if (match) finalOtp = match[0];
+            }
+            if (!finalOtp) finalOtp = JSON.stringify(latestOtpObj);
+          } else finalOtp = latestOtpObj;
+          
+          document.getElementById('otpOutput').value = finalOtp;
+          showToast(`📩 OTP: ${finalOtp}`, false, true);
+          setStatus('✅ Đã nhận mã!', '#28C76F');
+          clearInterval(otpPollingInterval);
+        }
+      }
+    } catch (error) {}
+  }, 5000 + jitterOffset); 
+}
+
+// ==========================================
+// CHỨC NĂNG CLICK-TO-COPY
+// ==========================================
+function setStatus(text, color = '#EA5455') { 
+  const el = document.getElementById('statusText');
+  el.textContent = text; el.style.color = color;
+}
+
+document.getElementById('phoneOutput').addEventListener('click', function() {
+  let phone = this.value;
+  if (!phone || phone === "---") return showToast('⚠️ Chưa có SĐT', true);
+  copyText(phone);
+});
+
+document.getElementById('otpOutput').addEventListener('click', function() {
+  let otp = this.value;
+  if (!otp || otp === "---") return showToast('⚠️ Chưa có mã OTP', true);
+  copyText(otp);
+});
+
+function showToast(msg, isError = false, isSuccess = false) {
+  const toast = document.getElementById('customToast');
+  toast.textContent = msg;
+  toast.className = 'show ' + (isError ? 'error' : isSuccess ? 'success' : '');
+  setTimeout(() => toast.classList.remove('show'), 3000);
+}
+
+function copyText(text) {
+  if (navigator.clipboard && window.isSecureContext) {
+    navigator.clipboard.writeText(text).then(() => showToast(`📋 Copy: ${text}`, false, true)).catch(() => fallbackCopy(text));
+  } else fallbackCopy(text);
+}
+function fallbackCopy(text) {
+  const t = document.createElement("textarea"); t.value = text; t.style.position = "fixed"; t.style.left = "-9999px";
+  document.body.appendChild(t); t.select();
+  try { document.execCommand('copy'); showToast(`📋 Copy: ${text}`, false, true); } catch { showToast('⚠️ Lỗi copy', true); }
+  document.body.removeChild(t);
+}
+
+(function () {
+  ['gesturestart', 'gesturechange', 'gestureend'].forEach(function(evt) { document.addEventListener(evt, e => e.preventDefault(), { passive: false }); });
+  document.addEventListener('touchmove', e => { if (e.touches.length > 1) e.preventDefault(); }, { passive: false });
+  let lastTouchEnd = 0;
+  document.addEventListener('touchend', e => {
+    let now = Date.now();
+    let el = e.target.closest ? e.target.closest('button, input, select, a, label') : null;
+    if (!el && now - lastTouchEnd <= 300) e.preventDefault();
+    lastTouchEnd = now;
+  }, { passive: false });
+})();
+</script>
+</body>
+</html>
